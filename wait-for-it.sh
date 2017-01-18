@@ -15,7 +15,7 @@ Usage:
                             Do not like to sleep? Pass 0.
     -s                      Only execute subcommand if the test succeeds
     -q                      Do not output any status messages
-    -t TIMEOUT              Timeout in seconds, zero for no timeout (honours sleep time when t > 0)
+    -t TIMEOUT              Timeout in seconds, zero for no timeout (does not honor sleep time)
     -- COMMAND ARGS         Execute command with args after the test finishes
 USAGE
     exit 1
@@ -40,7 +40,7 @@ wait_for() {
     esac
 
     if [[ $TIMEOUT -gt 0 ]]; then
-        echoerr "$cmdname: waiting $((TIMEOUT + sleep_time)) seconds for $wait_host:${wait_ports[@]}"
+        echoerr "$cmdname: waiting $TIMEOUT seconds for $wait_host:${wait_ports[@]}"
     else
         echoerr "$cmdname: waiting for $wait_host:${wait_ports[@]} without a timeout"
     fi
@@ -75,9 +75,9 @@ wait_for_wrapper() {
 
     # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
     if [[ $QUIET -eq 1 ]]; then
-        timeout $((TIMEOUT + sleep_time)) $0 $wait_host:$wait_port:$sleep_time -q -c -t $TIMEOUT &
+        timeout $TIMEOUT $0 $wait_host:$wait_port:$sleep_time -q -c -t $TIMEOUT &
     else
-        timeout $((TIMEOUT + sleep_time)) $0 $wait_host:$wait_port:$sleep_time -c -t $TIMEOUT &
+        timeout $TIMEOUT $0 $wait_host:$wait_port:$sleep_time -c -t $TIMEOUT &
     fi
 
     PID=$!
@@ -86,7 +86,7 @@ wait_for_wrapper() {
     wait $PID
     RESULT=$?
     if [[ $RESULT -ne 0 ]]; then
-        echoerr "$cmdname: timeout occurred after waiting $((TIMEOUT + sleep_time)) seconds for $wait_host:$wait_port"
+        echoerr "$cmdname: timeout occurred after waiting $TIMEOUT seconds for $wait_host:$wait_port"
     fi
 
     return $RESULT
